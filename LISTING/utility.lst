@@ -1,0 +1,32 @@
+C51 COMPILER V9.00   UTILITY                                                               08/16/2015 23:21:08 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE UTILITY
+OBJECT MODULE PLACED IN ..\OUT\utility.obj
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE ..\SRC\utility.c BROWSE INCDIR(..\INC;..\SRC) DEBUG OBJECTEXTEND PRINT(..\L
+                    -ISTING\utility.lst) OBJECT(..\OUT\utility.obj)
+
+line level    source
+
+   1          #include "utility.h"
+   2          
+   3          void bzero(unsigned char *STR, unsigned int LENGTH)
+   4          {
+   5   1              int i = 0;
+   6   1              for (; i < LENGTH; i++)
+   7   1                      STR[i] = 0;
+   8   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     38    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       3
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

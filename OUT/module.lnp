@@ -1,0 +1,14 @@
+"..\OUT\STARTUP.obj",
+"..\OUT\main.obj",
+"..\OUT\lcd12864.obj",
+"..\OUT\hc_sr04.obj",
+"..\OUT\pwm.obj",
+"..\OUT\adc.obj",
+"..\OUT\timeout.obj",
+"..\OUT\tm1650.obj",
+"..\OUT\uart.obj",
+"..\OUT\utility.obj",
+"..\OUT\screen.obj",
+"..\OUT\pcf8591.obj" 
+TO "..\OUT\module" 
+PRINT("..\LISTING\module.m51") RAMSIZE(256) 

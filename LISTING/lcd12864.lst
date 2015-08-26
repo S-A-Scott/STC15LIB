@@ -1,0 +1,120 @@
+C51 COMPILER V9.00   LCD12864                                                              08/16/2015 23:21:07 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE LCD12864
+OBJECT MODULE PLACED IN ..\OUT\lcd12864.obj
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE ..\SRC\lcd12864.c BROWSE INCDIR(..\INC;..\SRC) DEBUG OBJECTEXTEND PRINT(..\
+                    -LISTING\lcd12864.lst) OBJECT(..\OUT\lcd12864.obj)
+
+line level    source
+
+   1          /*---------------------------------------------------------------*-
+   2             Author        : Spencer Scott
+   3             Email         : spencerscott@gmail.com
+   4             Last modified : 2015-08-11 04:40
+   5             Filename      : lcd12864.c
+   6            ---------------------------------------------------------------
+   7             
+   8             Parallel interface code for LCD12864.
+   9          
+  10             Only implement *BASIC* instruction set.
+  11          -*---------------------------------------------------------------*/
+  12           
+  13          #include "main.h"
+  14          #include "timeout.h"
+  15          #include "port.h"
+  16          
+  17          #include "lcd12864.h"
+  18          
+  19          
+  20          /*---------------------------------------------------------------*-
+  21           * LCD12864_Init()
+  22           * 
+  23           * Initialization function for LCD12864 library 
+  24          -*---------------------------------------------------------------*/
+  25          void LCD12864_Init(void)
+  26          {
+  27   1              LCD12864_PSB = 1;
+  28   1      
+  29   1              LCD12864_Write_CMD(BASIC_INSTRUCTION_SET);      
+  30   1              Delay_5ms();
+  31   1              LCD12864_Write_CMD(DISPLAY_CURSOR);     
+  32   1              Delay_5ms();
+  33   1              LCD12864_Write_CMD(CLEAR_DISPLAY);
+  34   1              Delay_5ms();
+  35   1      }
+  36          
+  37          
+  38          /*---------------------------------------------------------------*-
+  39           * LCD12864_Write_CMD()
+  40           * 
+  41           * Write instruction
+  42          -*---------------------------------------------------------------*/
+  43          void LCD12864_Write_CMD(unsigned char CMD)
+  44          {
+  45   1              LCD12864_RS = 0;
+  46   1              LCD12864_RW = 0;
+  47   1              LCD12864_EN = 0;
+  48   1              LCD12864_port = CMD;
+  49   1              Delay_5ms();
+  50   1              LCD12864_EN = 1;
+  51   1              Delay_5ms();
+  52   1              LCD12864_EN = 0;
+  53   1      }
+  54          
+C51 COMPILER V9.00   LCD12864                                                              08/16/2015 23:21:07 PAGE 2   
+
+  55          
+  56          /*---------------------------------------------------------------*-
+  57           * LCD12864_Write_Data()
+  58           * 
+  59           * Write data into display data RAM
+  60          -*---------------------------------------------------------------*/
+  61          void LCD12864_Write_Data(unsigned char DATA)
+  62          {
+  63   1              LCD12864_RS = 1;
+  64   1              LCD12864_RW = 0;
+  65   1              LCD12864_EN = 0;
+  66   1              LCD12864_port = DATA;
+  67   1              Delay_5ms();
+  68   1              LCD12864_EN = 1;
+  69   1              Delay_5ms();
+  70   1              LCD12864_EN = 0;
+  71   1      }
+  72          
+  73          
+  74          /*---------------------------------------------------------------*-
+  75           * LCD12864_Locate()
+  76           * 
+  77           * Locate the display position
+  78          -*---------------------------------------------------------------*/
+  79          void LCD12864_Locate(unsigned char X, unsigned char Y)
+  80          {
+  81   1              unsigned char pos;
+  82   1              if (X == 0) {
+  83   2                      X = 0x80;
+  84   2              } else if (X == 1) {
+  85   2                      X = 0x90;
+  86   2              } else if (X == 2) {
+  87   2                      X = 0x88;
+  88   2              } else if (X == 3) {
+  89   2                      X = 0x98;
+  90   2              }
+  91   1      
+  92   1              pos = X + Y;
+  93   1              LCD12864_Write_CMD(pos);
+  94   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     96    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

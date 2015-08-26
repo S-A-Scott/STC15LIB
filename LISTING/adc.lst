@@ -1,0 +1,84 @@
+C51 COMPILER V9.00   ADC                                                                   08/16/2015 23:21:07 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE ADC
+OBJECT MODULE PLACED IN ..\OUT\adc.obj
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE ..\SRC\adc.c BROWSE INCDIR(..\INC;..\SRC) DEBUG OBJECTEXTEND PRINT(..\LISTI
+                    -NG\adc.lst) OBJECT(..\OUT\adc.obj)
+
+line level    source
+
+   1          /*---------------------------------------------------------------*-
+   2             Author        : Spencer Scott
+   3             Email         : spencerscott@gmail.com
+   4             Last modified : 2015-08-11 04:28
+   5             Filename      : adc.c
+   6            ---------------------------------------------------------------
+   7             
+   8             8-Channel(from P0.0 to P0.7)
+   9             10-bit high-speed A/D Convertion routine
+  10          -*---------------------------------------------------------------*/
+  11           
+  12          #include <stdio.h>
+  13          #include <intrins.h>
+  14          #include "main.h"
+  15          #include "timeout.h"
+  16          
+  17          #include "adc.h"
+  18          
+  19          void ADC_Init(unsigned char CHANNEL)
+  20          {
+  21   1              P1ASF = CHANNEL;
+  22   1              ADC_RES = 0;
+  23   1              ADC_CONTR = ADC_POWER | ADC_SPEED_540;
+  24   1              Delay_10us();           // ADC power on and delay
+  25   1      }
+  26          
+  27          unsigned int ADC_Get_10Bit_Result(unsigned char CHANNEL)
+  28          {
+  29   1              unsigned char temp1 = 0;
+  30   1              unsigned        char temp2 = 0;
+  31   1              unsigned int result = 0;
+  32   1              ADC_CONTR = ADC_POWER | ADC_SPEED_540 | ADC_START | CHANNEL;
+  33   1              _nop_();        // Must wait before inquiry
+  34   1              _nop_();
+  35   1              _nop_();
+  36   1              _nop_();
+  37   1              while (!(ADC_CONTR & ADC_FLAG))
+  38   1                      ;                       // Wait complete bit
+  39   1              ADC_CONTR &= ~ADC_FLAG;
+  40   1              temp1 = ADC_RES;
+  41   1              temp2 = ADC_RESL & 0x03;
+  42   1              result = (unsigned int)temp1 * 4 + temp2;
+  43   1              
+  44   1              return result;
+  45   1      }
+  46          
+  47          unsigned char ADC_Get_8Bit_Result(unsigned char CHANNEL)
+  48          {
+  49   1              ADC_CONTR = ADC_POWER | ADC_SPEED_540 | ADC_START | CHANNEL;
+  50   1              _nop_();        // Must wait before inquiry
+  51   1              _nop_();
+  52   1              _nop_();
+  53   1              _nop_();
+  54   1              while (!(ADC_CONTR & ADC_FLAG))
+C51 COMPILER V9.00   ADC                                                                   08/16/2015 23:21:07 PAGE 2   
+
+  55   1                      ;                       // Wait complete bit
+  56   1              ADC_CONTR &= ~ADC_FLAG;
+  57   1              return ADC_RES;
+  58   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     78    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

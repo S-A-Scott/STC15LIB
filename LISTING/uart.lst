@@ -1,0 +1,184 @@
+C51 COMPILER V9.00   UART                                                                  08/16/2015 23:21:08 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE UART
+OBJECT MODULE PLACED IN ..\OUT\uart.obj
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE ..\SRC\uart.c BROWSE INCDIR(..\INC;..\SRC) DEBUG OBJECTEXTEND PRINT(..\LIST
+                    -ING\uart.lst) OBJECT(..\OUT\uart.obj)
+
+line level    source
+
+   1          #include "main.h"
+   2          #include "utility.h"
+   3          
+   4          #include "uart.h"
+   5          
+   6          // ------ Public variable declarations --------------------
+   7          extern double Current_of_i2;
+   8          
+   9          // ------ Private variable definitions --------------------
+  10          
+  11          static bit UART1_busy = 0;
+  12          static bit UART2_busy = 0;
+  13          
+  14          // ------ Public variable definitions ---------------------
+  15          uchar xdata UART1_data_received[64];
+  16          uchar UART1_data_counter = 0;
+  17          
+  18          uchar xdata UART2_data_received[64];
+  19          uchar UART2_data_counter = 0;
+  20          
+  21          // ------ private variable definitions -------------------- 
+  22          
+  23          #ifdef BAUD_RATE_9600
+  24                  #define T2_L 0xE0
+  25                  #define T2_H 0xFE
+  26          #else
+                      #define T2_L 0xE8
+                      #define T2_H 0xFF
+              #endif
+  30          
+  31          /*---------------------------------------------------------------*-
+  32           * UART1_Init()
+  33           * 
+  34           * Initialization function for UART1 library
+  35          -*---------------------------------------------------------------*/
+  36          void UART1_Init()
+  37          {
+  38   1              bzero(UART1_data_received, 64);
+  39   1              SCON  = 0x50;   // 8-bit variable UART
+  40   1              AUXR |= 0x04;   // Baudrate generator works in 1T mode
+  41   1              AUXR |= 0x01;   // Choose timer 2 as baudrate generator
+  42   1              T2L   = T2_L;
+  43   1              T2H   = T2_H;
+  44   1              AUXR |= 0x10;   // Enable Timer 2
+  45   1      
+  46   1              ES    = 1;              // Enable UART1 interrupt
+  47   1              EA    = 1;
+  48   1      }
+  49          
+  50          /*---------------------------------------------------------------*-
+  51           * UART2_Init()
+  52           * 
+  53           * Initialization function for UART2 library
+  54          -*---------------------------------------------------------------*/
+C51 COMPILER V9.00   UART                                                                  08/16/2015 23:21:08 PAGE 2   
+
+  55          void UART2_Init()
+  56          {
+  57   1              bzero(UART2_data_received, 64);
+  58   1              S2CON = 0x50;   // 8-bit variable UART
+  59   1              AUXR |= 0x04;   // Baudrate generator works in 1T mode
+  60   1              T2L   = T2_L;
+  61   1              T2H   = T2_H;
+  62   1              AUXR |= 0x10;   // Enable Timer 2
+  63   1      
+  64   1              IE2  |= 0x01;   // Enable UART2 interrupt
+  65   1              EA    = 1;              // Open master interrupt switch
+  66   1      }
+  67          
+  68          void UART1_Bzero(void)
+  69          {
+  70   1              uchar i = 0;
+  71   1              for (; i < UART1_data_counter; i++)
+  72   1                      UART1_data_received[i] = 0;
+  73   1              UART1_data_counter = 0;
+  74   1      }
+  75          
+  76          void UART2_Bzero(void)
+  77          {
+  78   1              uchar i = 0;
+  79   1              for (; i < UART2_data_counter; i++)
+  80   1                      UART2_data_received[i] = 0;
+  81   1              UART2_data_counter = 0;
+  82   1      }
+  83          
+  84          void UART1_Send_Char(unsigned char CHAR)
+  85          {
+  86   1              while (UART1_busy)
+  87   1                      ;
+  88   1              UART1_busy = 1;
+  89   1              SBUF = CHAR;            
+  90   1      }
+  91          
+  92          void UART2_Send_Char(unsigned char CHAR)
+  93          {
+  94   1              while (UART2_busy)
+  95   1                      ;
+  96   1      
+  97   1              UART2_busy = 1;
+  98   1              S2BUF = CHAR;
+  99   1      }
+ 100          
+ 101          char UART1_Send_String(unsigned char *STR)
+ 102          {
+ 103   1              if (*STR == '\0')
+ 104   1                      return 0;
+ 105   1              while (*STR != '\0') {
+ 106   2                      UART1_Send_Char(*STR);
+ 107   2                      STR++;
+ 108   2              }
+ 109   1              return 1;
+ 110   1      }
+ 111          
+ 112          char UART2_Send_String(unsigned char *STR)
+ 113          {
+ 114   1              if (*STR == '\0')
+ 115   1                      return 0;
+ 116   1              while (*STR != '\0') {
+C51 COMPILER V9.00   UART                                                                  08/16/2015 23:21:08 PAGE 3   
+
+ 117   2                      UART2_Send_Char(*STR);
+ 118   2                      STR++;
+ 119   2              }
+ 120   1              return 1;
+ 121   1      }
+ 122          
+ 123          void UART1_Interrupt() interrupt INTERRUPT_UART_1_Overflow using 1
+ 124          {
+ 125   1              if (RI) {
+ 126   2                      RI = 0;
+ 127   2                      UART1_data_received[UART1_data_counter++] = SBUF;
+ 128   2              }
+ 129   1              if (TI) {
+ 130   2                      TI = 0;
+ 131   2                      UART1_busy = 0;
+ 132   2              }
+ 133   1      }
+ 134          
+ 135          
+ 136          void UART2_Interrupt() interrupt INTERRUPT_UART_2_Overflow using 1
+ 137          {
+ 138   1              if (S2CON & S2RI) {
+ 139   2                      S2CON &= ~S2RI;
+ 140   2                      UART2_data_received[UART2_data_counter++] = S2BUF;
+ 141   2                      if (UART2_data_received[0] == 'a') {
+ 142   3                              if ((2.0 - Current_of_i2) > 0.0001)
+ 143   3                                      Current_of_i2 += 0.05;
+ 144   3                              UART2_Bzero();
+ 145   3                      }
+ 146   2                      else if (UART2_data_received[0] == 'd') {
+ 147   3                              if ((Current_of_i2 - 1.0) > 0.0001)
+ 148   3                                      Current_of_i2 -= 0.05;
+ 149   3                              UART2_Bzero();
+ 150   3                      }               
+ 151   2              }
+ 152   1              if (S2CON & S2TI) {
+ 153   2                      S2CON &= ~S2TI;
+ 154   2                      UART2_busy = 0;
+ 155   2              }
+ 156   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    441    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =    128    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      2    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      2    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

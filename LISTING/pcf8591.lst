@@ -1,0 +1,185 @@
+C51 COMPILER V9.00   PCF8591                                                               08/16/2015 23:21:08 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE PCF8591
+OBJECT MODULE PLACED IN ..\OUT\pcf8591.obj
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE ..\SRC\pcf8591.c BROWSE INCDIR(..\INC;..\SRC) DEBUG OBJECTEXTEND PRINT(..\L
+                    -ISTING\pcf8591.lst) OBJECT(..\OUT\pcf8591.obj)
+
+line level    source
+
+   1          #include "port.h"
+   2          #include "main.h"
+   3          #include "timeout.h"
+   4          
+   5          
+   6          #include "pcf8591.h"
+   7          
+   8          // ------ Private constants -------------------------------
+   9          
+  10          #define PCF8591_WRITE_ADDRESS 0x90
+  11          #define PCF8591_READ_ADDRESS  0x91
+  12          
+  13          // ------ Private function prototypes ---------------------
+  14          
+  15          static void PCF8591_Start(void);
+  16          static void PCF8591_Stop(void);
+  17          static void PCF8591_ACK(void);
+  18          static void PCF8591_NO_ACK(void);
+  19          static void PCF8591_Write_Byte(unsigned char);
+  20          static unsigned char PCF8591_Read_Byte(void);
+  21          
+  22          /*---------------------------------------------------------------*-
+  23           * PCF8591_Start()
+  24           * 
+  25           * Send start condition 
+  26          -*---------------------------------------------------------------*/
+  27          void PCF8591_Start(void)
+  28          {
+  29   1              PCF_SCL = 1;
+  30   1              PCF_SDA = 1;
+  31   1              Delay_5us();
+  32   1              PCF_SDA = 0;
+  33   1              Delay_5us();
+  34   1              PCF_SCL = 0;
+  35   1              Delay_5us();
+  36   1      }
+  37          
+  38          /*---------------------------------------------------------------*-
+  39           * PCF8591_Stop();
+  40           * 
+  41           * Send stop condition
+  42          -*---------------------------------------------------------------*/
+  43          void PCF8591_Stop(void)
+  44          {
+  45   1              PCF_SCL = 0;
+  46   1              PCF_SDA = 0;
+  47   1              Delay_5us();
+  48   1              PCF_SCL = 1;
+  49   1              Delay_5us();
+  50   1              PCF_SDA = 1;
+  51   1              Delay_5us();
+  52   1      }
+  53          
+  54          
+C51 COMPILER V9.00   PCF8591                                                               08/16/2015 23:21:08 PAGE 2   
+
+  55          /*---------------------------------------------------------------*-
+  56           * PCF8591_ACK()
+  57           * 
+  58           * Make sure the slave has received the data
+  59          -*---------------------------------------------------------------*/
+  60          void PCF8591_ACK()
+  61          {
+  62   1              PCF_SDA = 0;
+  63   1              PCF_SCL = 1;
+  64   1              Delay_5us();
+  65   1              PCF_SCL = 0;
+  66   1              PCF_SDA = 1;
+  67   1      }
+  68          
+  69          void PCF8591_NO_ACK()
+  70          {
+  71   1              PCF_SDA = 1;
+  72   1              Delay_5us();
+  73   1              PCF_SCL = 1;
+  74   1              Delay_5us();
+  75   1              PCF_SCL = 0;
+  76   1              Delay_5us();
+  77   1      }
+  78          
+  79          /*---------------------------------------------------------------*-
+  80           * PCF8591_Write_Byte()
+  81           * 
+  82           * Send one byte data to slave
+  83          -*---------------------------------------------------------------*/
+  84          void PCF8591_Write_Byte(unsigned char DATA)
+  85          {
+  86   1              unsigned char i;
+  87   1              for (i = 0; i < 8; i++) {
+  88   2                      if ((DATA & 0x80) == 0)
+  89   2                              PCF_SDA = 0;
+  90   2                      else
+  91   2                              PCF_SDA = 1;
+  92   2                      DATA <<= 1;
+  93   2                      PCF_SCL = 0;
+  94   2                      Delay_5us();
+  95   2                      PCF_SCL = 1;
+  96   2                      Delay_5us();
+  97   2                      PCF_SCL = 0;
+  98   2                      Delay_5us();
+  99   2              }
+ 100   1      }
+ 101          
+ 102          /*---------------------------------------------------------------*-
+ 103           * PCF8591_Read_Byte()
+ 104           * 
+ 105           * Read one byte data from slave
+ 106          -*---------------------------------------------------------------*/
+ 107          unsigned char PCF8591_Read_Byte(void)
+ 108          {
+ 109   1              unsigned char i = 0;
+ 110   1              unsigned char Data;
+ 111   1      
+ 112   1              for (i = 0; i < 8; i++) {
+ 113   2                      PCF_SCL = 1;
+ 114   2                      Delay_5us();
+ 115   2                      if (PCF_SDA)
+ 116   2                              Data |= 1;
+C51 COMPILER V9.00   PCF8591                                                               08/16/2015 23:21:08 PAGE 3   
+
+ 117   2                      if (i < 7)
+ 118   2                              Data <<= 1;
+ 119   2                      PCF_SCL = 0;
+ 120   2                      Delay_5us();
+ 121   2              }
+ 122   1              return Data;
+ 123   1      }
+ 124          
+ 125          unsigned char PCF8951_Get_ADC_Result(unsigned char CHANNEL)
+ 126          {
+ 127   1              unsigned char result;
+ 128   1      
+ 129   1              PCF8591_Start();
+ 130   1              PCF8591_Write_Byte(PCF8591_WRITE_ADDRESS);
+ 131   1              PCF8591_ACK();
+ 132   1              PCF8591_Write_Byte(0x40 | CHANNEL);
+ 133   1              PCF8591_ACK();
+ 134   1              PCF8591_Stop();
+ 135   1      
+ 136   1              PCF8591_Start();
+ 137   1              PCF8591_Write_Byte(PCF8591_READ_ADDRESS);
+ 138   1              PCF8591_ACK();
+ 139   1              result = PCF8591_Read_Byte();
+ 140   1              PCF8591_NO_ACK();
+ 141   1              PCF8591_Stop();
+ 142   1      
+ 143   1              return result;
+ 144   1      }
+ 145          
+ 146          
+ 147          void PCF8951_DA_Conversion(unsigned char VAL)
+ 148          {
+ 149   1              PCF8591_Start();
+ 150   1              PCF8591_Write_Byte(PCF8591_WRITE_ADDRESS);
+ 151   1              PCF8591_ACK();
+ 152   1              PCF8591_Write_Byte(0x40);
+ 153   1              PCF8591_ACK();
+ 154   1              PCF8591_Write_Byte(VAL);
+ 155   1              PCF8591_ACK();
+ 156   1              PCF8591_Stop();
+ 157   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    238    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       7
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

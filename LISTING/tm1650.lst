@@ -1,0 +1,153 @@
+C51 COMPILER V9.00   TM1650                                                                08/16/2015 23:21:08 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE TM1650
+OBJECT MODULE PLACED IN ..\OUT\tm1650.obj
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE ..\SRC\tm1650.c BROWSE INCDIR(..\INC;..\SRC) DEBUG OBJECTEXTEND PRINT(..\LI
+                    -STING\tm1650.lst) OBJECT(..\OUT\tm1650.obj)
+
+line level    source
+
+   1          /*---------------------------------------------------------------*-
+   2             Author        : Spencer Scott
+   3             Email         : spencerscott@gmail.com
+   4             Last modified : 2015-08-11 04:52
+   5             Filename      : tm1650.c
+   6            ---------------------------------------------------------------
+   7              
+   8                
+   9          -*---------------------------------------------------------------*/
+  10           
+  11          #include "main.h"
+  12          #include "timeout.h"
+  13          #include "port.h"
+  14          
+  15          #include "tm1650.h"
+  16          
+  17          // ------ Public variable definitions ---------------------
+  18          
+  19          unsigned char code Digital_tube_coding[] = {
+  20                  0x3F, 0x06, 0x5B, 0x4F,
+  21                  0x66, 0x6D, 0x7D, 0x07,
+  22                  0x7F, 0x6F, 0x77, 0x7C,
+  23                  0x39, 0x5E, 0x79, 0x71,
+  24          };
+  25          
+  26          // ------ Private function prototypes ---------------------
+  27          
+  28          static void TM1650_Start(void);
+  29          static void TM1650_Stop(void);
+  30          static void TM1650_Response(void);
+  31          static void Delay_us(unsigned char TIME);
+  32          static void TM1650_Write_Byte(unsigned char DATA);
+  33          
+  34          
+  35          /*---------------------------------------------------------------*-
+  36           * TM1650_Start()
+  37           * 
+  38           * Send start condition 
+  39          -*---------------------------------------------------------------*/
+  40          void TM1650_Start(void)
+  41          {
+  42   1              SCL = 1;
+  43   1              SDA = 1;
+  44   1              Delay_5us();
+  45   1              SDA = 0;
+  46   1              Delay_5us();
+  47   1              SCL = 0;
+  48   1              Delay_5us();
+  49   1      }
+  50          
+  51          /*---------------------------------------------------------------*-
+  52           * TM1650_Stop();
+  53           * 
+  54           * Send stop condition
+C51 COMPILER V9.00   TM1650                                                                08/16/2015 23:21:08 PAGE 2   
+
+  55          -*---------------------------------------------------------------*/
+  56          void TM1650_Stop(void)
+  57          {
+  58   1              SCL = 0;
+  59   1              SDA = 0;
+  60   1              Delay_5us();
+  61   1              SCL = 1;
+  62   1              Delay_5us();
+  63   1              SDA = 1;
+  64   1              Delay_5us();
+  65   1      }
+  66          
+  67          
+  68          /*---------------------------------------------------------------*-
+  69           * TM1650_ACK()
+  70           * 
+  71           * Make sure the slave has received the data
+  72          -*---------------------------------------------------------------*/
+  73          void TM1650_ACK()
+  74          {
+  75   1              SDA = 0;
+  76   1              SCL = 1;
+  77   1              Delay_5us();
+  78   1              SCL = 0;
+  79   1              SDA = 1;
+  80   1      }
+  81          
+  82          
+  83          /*---------------------------------------------------------------*-
+  84           * TM1650_Write_Byte()
+  85           * 
+  86           * Send one byte data to slave
+  87          -*---------------------------------------------------------------*/
+  88          void TM1650_Write_Byte(unsigned char DATA)
+  89          {
+  90   1              unsigned char i;
+  91   1              for (i = 0; i < 8; i++) {
+  92   2                      if ((DATA & 0x80) == 0)
+  93   2                              SDA = 0;
+  94   2                      else
+  95   2                              SDA = 1;
+  96   2                      DATA <<= 1;
+  97   2                      SCL = 0;
+  98   2                      Delay_5us();
+  99   2                      SCL = 1;
+ 100   2                      Delay_5us();
+ 101   2                      SCL = 0;
+ 102   2                      Delay_5us();
+ 103   2              }
+ 104   1      }
+ 105          
+ 106          void TM1650_Init(void)
+ 107          {
+ 108   1              TM1650_Send(DEFAULT_SETTING, NORMAL_DISPLAY);
+ 109   1      }
+ 110          
+ 111          /*---------------------------------------------------------------*-
+ 112           * TM1650_Display()
+ 113           * 
+ 114           * Display the number on the specified postion or Send
+ 115           * initialization commands.
+ 116          -*---------------------------------------------------------------*/
+C51 COMPILER V9.00   TM1650                                                                08/16/2015 23:21:08 PAGE 3   
+
+ 117          void TM1650_Send(unsigned char CMD, unsigned char DATA)
+ 118          {
+ 119   1              TM1650_Start();
+ 120   1              TM1650_Write_Byte(CMD); 
+ 121   1              TM1650_ACK();
+ 122   1              TM1650_Write_Byte(DATA);
+ 123   1              TM1650_ACK();
+ 124   1              TM1650_Stop();
+ 125   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    126    ----
+   CONSTANT SIZE    =     16    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       4
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
