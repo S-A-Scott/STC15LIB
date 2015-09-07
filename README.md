@@ -34,9 +34,9 @@ Project
 [] = directory
 ```
 
-Where:
+Where:  
 | Directory | Usage                                               |
-------------|------------------------------------------------------
+|-----------|-----------------------------------------------------|
 | MAIN      | Contain main.c file which defines main function     |
 | INC       | Consist of project header files                     |
 | SOURCE    | Consist of project source files                     |
